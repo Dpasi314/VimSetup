@@ -5,35 +5,44 @@ if [ $# -ne 1 ]; then
 fi
 
 flag=$1
+end_pt="~/.vim"
+download_git_repo() {
+	cd ~/; # We're keeping everything in the home directory for easy access
+	git clone https://github.com/Dpasi314/Vim;
+	return ~/Vim # If we need to access the file, we'll do that after
+}
+
+pull_git_repo() {
+	cd ~/Vim;
+	git pull;
+}
+
+copy_contents_to(){
+	cd ~/;
+	cp -avr $1 $2
+}
+
 if [ $flag == "-setup" ] || [ $flag == "-s" ]; then
-	#	Check to see if .vim exists, if it doesn't create it
-	if [ ! -e ~/.vim ]; then
-		echo 'No dotVim folder found! Creating...';
+	if [ ! -e ~/Vim ]; then
+		download_git_repo
+	else
+		pull_git_repo
+	fi
+
+	if [ ! -e ~/.vim ]; then # the .vim folder does't exist.
 		mkdir ~/.vim;
-		echo 'dotVim created!';
-		echo 'Copying over vimFiles';
-		cp -R vim/. ~/.vim;
-		echo 'Files copied';
-	else 
-		# If they have one, archive, and use mine
-		echo 'dotVim Found!..Creating temporary location....';
-		cp -R ~/.vim ~/.vimtmp
-		echo '~/.vimtmp created! Contiuing...';
-		cp -R vim/. ~/.vim;
-		echo 'Files copied';
+		copy_contents_to ~/Vim ~/.vim/;
+	else
+		mkdir ~/.vimtmp;
+		copy_contents_to ~/.vim/ ~/.vimtmp/
 	fi
 	
-	#	Check to see if there is a vimrc file
-	if [ ! -e ~/.vimrc ]; then
-		echo 'No vimrc file found! Copying...'
-		cp vimrc ~/.vimrc
+	if [ ! -e ~/.vimrc ]; then # the .vimrc file doesn't exist
+		copy_contents_to ~/Vim/.vimrc ~/;
 	else
-		#Create temp copy over, use mine
-		echo 'vimrc found...Creating temporary location...';
-		cp ~/.vimrc ~/.vimrctmp;
-		echo '~/.vimrctmp created';
-		cp vimrc ~/.vimrc;
-		echo 'vimrc created!';
+		mv ~/.vimrc ~/.vimrctmp
+		copy_contents_to ~/Vim/.vimrc ~/;
+
 	fi
 	
 	echo 'VimSetup Finished';
@@ -58,7 +67,7 @@ elif [ $flag == "-remove" ] || [ $flag == "-r" ]; then
 	else
 		echo 'Removing vimrc';
 		rm ~/.vimrc;
-		echo 'Replacing origional file...';
+		echo 'Replacing original file...';
 		mv ~/.vimrctmp ~/.vimrc;
 		echo 'vimrc re-installed!';
 	fi
